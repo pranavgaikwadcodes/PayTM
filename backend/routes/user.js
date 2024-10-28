@@ -4,6 +4,7 @@ const zod = require('zod')
 const { User } = require('../db')
 const jwt = require('jsonwebtoken')
 const { JWT_SECRET } = require('../config')
+const { authMiddleware } = require('../middleware')
 
 const signupSchema = zod.object({
     username: zod.string().email(),
@@ -17,7 +18,13 @@ const signinSchema = zod.object({
     password: zod.string(),
 })
 
-router.post('/signup', async (req, res, next) => {
+const userUpdateSchema = zod.object({
+    password: zod.string().optional(),
+    firstName: zod.string().optional(),
+    lastName: zod.string().optional(),
+})
+
+router.post('/signup', async (req, res) => {
     const { success } = signupSchema.safeParse(req.body);
     if (!success) {
         return res.status(411).json({ message: 'Email already taken / Incorrect inputs' });
@@ -48,7 +55,7 @@ router.post('/signup', async (req, res, next) => {
     })
 })
 
-router.post('/signin', async (req, res, next) => {
+router.post('/signin', async (req, res) => {
     const { success } = signinSchema.safeParse(req.body)
     if (!success) {
         res.status(411).json({ message: 'Error while logging in' })
@@ -73,9 +80,43 @@ router.post('/signin', async (req, res, next) => {
     })
 })
 
-router.post('/updateUser', (req, res, next) => {
+router.put('/updateUser', authMiddleware, async (req, res) => {
 
+    const {success} = userUpdateSchema.safeParse(req.body)
+    if(!success) {
+        return res.status(411).json({message: 'Error while updating information'})
+    }
+
+    const userID = req.userID
+    
+    try {
+        await User.updateOne({ _id: userID }, req.body);
+        return res.status(200).json({ message: "Updated successfully" });
+    } catch (error) {
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+})
+
+router.get('/bulk', async (req, res) => {
+    const filter = req.query.filter
+    
+    const users = await User.find({
+        $or : [
+            {username: {"$regex":filter}},
+            {firstName: {"$regex":filter}},
+            {lastName: {"$regex":filter}}
+        ]
+    })
+
+    res.json({
+        users: users.map( user => ({
+            username: user.username,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            _id: user._id
+        }))
+    })
 })
 
 
-module.exports = { router }
+module.exports = router;
