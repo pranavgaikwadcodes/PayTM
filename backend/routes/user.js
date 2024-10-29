@@ -64,7 +64,7 @@ router.post('/signup', async (req, res) => {
 router.post('/signin', async (req, res) => {
     const { success } = signinSchema.safeParse(req.body)
     if (!success) {
-        res.status(411).json({ message: 'Error while logging in' })
+        return res.status(411).json({ message: 'Error while logging in' })
     }
 
     const existingUser = await User.findOne({
@@ -73,7 +73,7 @@ router.post('/signin', async (req, res) => {
     })
 
     if (!existingUser) {
-        res.status(411).json({ message: 'Error while logging in' })
+        return res.status(411).json({ message: 'Error while logging in' })
     }
 
     const userID = existingUser._id
@@ -81,7 +81,7 @@ router.post('/signin', async (req, res) => {
         userID
     }, JWT_SECRET)
 
-    res.status(200).json({
+    return res.status(200).json({
         token: token
     })
 })

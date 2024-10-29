@@ -11,4 +11,6 @@ app.use(cors())
 
 app.use('/api/v1', router)
 
-app.listen(5000)
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+})
