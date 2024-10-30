@@ -55,3 +55,10 @@
 3. Commit your changes: `git commit -m 'Added x feature'`.
 4. Push to the branch: `git push origin feature/my-new-feature`.
 5. Submit a pull request.
+
+
+
+**Use this example command to run mongodb repl set for transactions**
+```
+mongod --port 27017 --dbpath C:\data\db --replSet rs0
+```
